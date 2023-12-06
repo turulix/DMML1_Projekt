@@ -14,15 +14,15 @@ project = "DMML1_Projekt_Tim"
 
 sweep_configuration = {
     "method": "grid",
-    "name": "Predicting Sales with Customer Info",
+    "name": "Predicting Sales with Store ID",
     "metric": {"goal": "maximize", "name": "mean_val_score"},
     "parameters": {
         "model": {"values": ["random_forest", "gradient_boosting"]},
-        "n_estimators": {"values": [10, 50, 100, 200, 500]},
+        "n_estimators": {"values": [10, 50, 100, 200, 400]},
         "val_size": {"values": [0.2, 0.3]},
         "n_folds": {"values": [2, 5]},
-        "max_depth": {"values": [3, 5, 10, 20]},
-        "max_features": {"values": [1, 2, 4, 8]},
+        "max_depth": {"values": [3, 5, 10]},
+        "max_features": {"values": [1, 2, 4, 8, "sqrt", "log2"]},
     },
 }
 
@@ -32,7 +32,7 @@ pathlib.Path("./model_output").mkdir(parents=True, exist_ok=True)
 is_leader = False
 if pathlib.Path("./.sweep_id").exists():
     with open("./.sweep_id", "r") as f:
-        sweep_id = f.read()
+        sweep_id = f.read().strip()
 else:
     sweep_id = wandb.sweep(sweep_configuration, project=project, entity=entity)
     with open("./.sweep_id", "w") as f:

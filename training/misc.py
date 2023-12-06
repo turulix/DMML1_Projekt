@@ -18,14 +18,14 @@ def get_train_data(rawdata=None) -> (pd.DataFrame, pd.Series):
 
     column_transformer = ColumnTransformer([
         ("Drop Unused", "drop", [
-            "Store ID",
+            # "Store ID",
             "Date",
             "Open",
             "PromoInterval"
         ]),
         ("One Hot Encode", OneHotEncoder(handle_unknown="ignore"), ["StateHoliday", "StoreType", "Assortment"]),
         ("Scale", StandardScaler(), [
-            "Customers",
+            # "Customers",
             "CompetitionDistance",
             "CompetitionOpenSinceMonth",
             "CompetitionOpenSinceYear",
@@ -37,7 +37,7 @@ def get_train_data(rawdata=None) -> (pd.DataFrame, pd.Series):
     data = pd.DataFrame(column_transformer.fit_transform(rawdata), columns=column_transformer.get_feature_names_out())
 
     return (
-        #data.drop(columns=["remainder__Customers", "remainder__Sales"]),
-        data.drop(columns=["remainder__Sales"]),
+        # data.drop(columns=["remainder__Customers", "remainder__Sales"]),
+        data.drop(columns=["remainder__Sales", "remainder__Customers"]),
         data["remainder__Sales"]
     )

@@ -5,6 +5,7 @@ try
 {
     $processes += start-process -FilePath python -ArgumentList "agent.py" -NoNewWindow -PassThru
 
+    Write-Output "Waiting for file to exist"
     While (!(Test-Path -Path .sweep_id -ErrorAction SilentlyContinue))
     {
         # endless loop, when the file will be there, it will continue
