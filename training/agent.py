@@ -26,8 +26,10 @@ sweep_configuration = {
     },
 }
 
-is_leader = False
+# Make sure the model_output directory exists
 pathlib.Path("./model_output").mkdir(parents=True, exist_ok=True)
+
+is_leader = False
 if pathlib.Path("./.sweep_id").exists():
     with open("./.sweep_id", "r") as f:
         sweep_id = f.read()
@@ -37,19 +39,21 @@ else:
         is_leader = True
         f.write(f"{entity}/{project}/{sweep_id}")
 
-# sweep_id = "hka-ml1/DMML1_Projekt_Tim/5mxxsaox"
-# sweep_id = wandb.sweep(sweep_configuration, project="DMML1_Projekt_Tim", entity="hka-ml1")
-
 print(f"Leader: {is_leader}")
 print(f"Sweep ID: {sweep_id}")
 
 
 def main():
+    features, target = get_train_data()
+    print(f"Features: {features.columns}")
+    print(f"Target: {target.name}")
+    print(f"Number of features: {len(features.columns)})")
+    print(f"Number of samples: {len(features)})")
+
     run = wandb.init()
-    run.log_code("./", name=f"sweep-{run.sweep_id}-code")
+    run.log_code("./", name=f"sweep-{run.sweep_id}-code", include_fn=lambda path: path.endswith(".py"))
 
     kfold = KFold(n_splits=run.config.n_folds, shuffle=True, random_state=42)
-    features, target = get_train_data()
 
     features, x_val, target, y_val = train_test_split(features, target, test_size=run.config.val_size, random_state=42)
 
