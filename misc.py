@@ -4,8 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
-def get_train_data(rawdata=None, preCustomers=False) -> (pd.DataFrame, pd.DataFrame,
-                                                         pd.DataFrame, pd.Series, pd.DataFrame, pd.Series):
+def get_train_data(rawdata=None, preCustomers=False) -> (pd.DataFrame, pd.Series):
     """
     :param rawdata: The data to use. If None, the data will be loaded from the csv files.
     :param preCustomers: If True, the data will be prepared for the prediction of customers. If False, the data will be
@@ -38,10 +37,7 @@ def get_train_data(rawdata=None, preCustomers=False) -> (pd.DataFrame, pd.DataFr
     rawdata.dropna(inplace=True)
     data = pd.DataFrame(column_transformer.fit_transform(rawdata), columns=column_transformer.get_feature_names_out())
 
-    x_train, x_test, y_train, y_test = train_test_split(
+    return (
         data.drop(columns=["remainder__Customers", "remainder__Sales"]),
-        data["remainder__Customers" if preCustomers else "remainder__Sales"],
-        test_size=0.2,
-        random_state=42
+        data["remainder__Customers" if preCustomers else "remainder__Sales"]
     )
-    return rawdata, data.drop(columns=["remainder__Customers", "remainder__Sales"]), x_train, x_test, y_train, y_test
