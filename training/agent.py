@@ -45,12 +45,14 @@ print(f"Sweep ID: {sweep_id}")
 
 def main():
     features, target = get_train_data()
+
+    run = wandb.init(tags=[target.name])
+
     print(f"Features: {features.columns}")
     print(f"Target: {target.name}")
-    print(f"Number of features: {len(features.columns)})")
-    print(f"Number of samples: {len(features)})")
+    print(f"Number of features: {len(features.columns)}")
+    print(f"Number of samples: {len(features)}")
 
-    run = wandb.init()
     run.log_code("./", name=f"sweep-{run.sweep_id}-code", include_fn=lambda path: path.endswith(".py"))
 
     kfold = KFold(n_splits=run.config.n_folds, shuffle=True, random_state=42)
@@ -116,5 +118,3 @@ def main():
 
 if __name__ == "__main__":
     wandb.agent(sweep_id, main)
-    if is_leader:
-        os.remove("./.sweep_id")
