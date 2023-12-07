@@ -15,6 +15,8 @@ def get_train_data(rawdata=None) -> (pd.DataFrame, pd.Series):
         rawdata = rawdata.merge(stores, on="Store ID")
         rawdata = rawdata.loc[rawdata["Open"] == 1]
         rawdata["Date"] = pd.to_datetime(rawdata["Date"])
+        rawdata["Year"] = rawdata["Date"].dt.year
+        rawdata["Month"] = rawdata["Date"].dt.month
 
     column_transformer = ColumnTransformer([
         ("Drop Unused", "drop", [
@@ -23,7 +25,11 @@ def get_train_data(rawdata=None) -> (pd.DataFrame, pd.Series):
             "Open",
             "PromoInterval"
         ]),
-        ("One Hot Encode", OneHotEncoder(handle_unknown="ignore"), ["StateHoliday", "StoreType", "Assortment"]),
+        ("One Hot Encode", OneHotEncoder(handle_unknown="ignore"), [
+            "StateHoliday",
+            "StoreType",
+            "Assortment"
+        ]),
         ("Scale", StandardScaler(), [
             # "Customers",
             "CompetitionDistance",
@@ -31,6 +37,8 @@ def get_train_data(rawdata=None) -> (pd.DataFrame, pd.Series):
             "CompetitionOpenSinceYear",
             "Promo2SinceWeek",
             "Promo2SinceYear",
+            "Year",
+            "Month"
         ]),
     ], remainder="passthrough")
     rawdata.dropna(inplace=True)

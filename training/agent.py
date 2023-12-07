@@ -14,7 +14,7 @@ project = "DMML1_Projekt_Tim"
 
 sweep_configuration = {
     "method": "grid",
-    "name": "Predicting Sales with Store ID",
+    "name": "Predicting Sales with Date & More Features",
     "metric": {"goal": "maximize", "name": "mean_val_score"},
     "parameters": {
         "model": {"values": ["random_forest", "gradient_boosting"]},
@@ -22,7 +22,7 @@ sweep_configuration = {
         "val_size": {"values": [0.2, 0.3]},
         "n_folds": {"values": [2, 5]},
         "max_depth": {"values": [3, 5, 10]},
-        "max_features": {"values": [1, 2, 4, 8, "sqrt", "log2"]},
+        "max_features": {"values": [1, 2, 4, 8, 12, 16, None, "sqrt", "log2"]},
     },
 }
 
