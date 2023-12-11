@@ -1,1 +1,4 @@
 .idea
+wandb
+model_output
+.sweep_id
