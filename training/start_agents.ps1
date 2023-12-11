@@ -3,7 +3,7 @@ $agent_count = 24
 $processes = @()
 try
 {
-    $processes += start-process -FilePath python -ArgumentList "agent_ensemble.py" -NoNewWindow -PassThru
+    $processes += start-process -FilePath python -ArgumentList "agent_decission_tree.py" -NoNewWindow -PassThru
 
     Write-Output "Waiting for file to exist"
     While (!(Test-Path -Path .sweep_id -ErrorAction SilentlyContinue))
@@ -13,7 +13,7 @@ try
 
     Write-Output "File exists, starting training"
     for ($i = 0; $i -lt $agent_count - 1; $i++) {
-        $processes += start-process -FilePath python -ArgumentList "agent_ensemble.py" -NoNewWindow -PassThru
+        $processes += start-process -FilePath python -ArgumentList "agent_decission_tree.py" -NoNewWindow -PassThru
     }
 
     While ($True)

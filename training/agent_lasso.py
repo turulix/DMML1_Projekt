@@ -1,9 +1,9 @@
 import wandb
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Lasso
 
 from misc import get_train_data, maybe_start_sweep, train_and_evaluate
 
-model_type = "Ridge"
+model_type = "Lasso"
 entity = "hka-ml1"
 project = "DMML1_Projekt_Tim"
 
@@ -30,7 +30,7 @@ def main():
     # Initialize wandb.
     run = wandb.init(tags=[target.name])
 
-    model = Ridge(
+    model = Lasso(
         alpha=run.config.alpha,
         max_iter=run.config.max_iter,
     )

@@ -1,9 +1,9 @@
 import wandb
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.tree import DecisionTreeRegressor
 
 from misc import get_train_data, maybe_start_sweep, train_and_evaluate
 
-model_type = "Ensemble"
+model_type = "Decision Tree"
 entity = "hka-ml1"
 project = "DMML1_Projekt_Tim"
 
@@ -13,10 +13,10 @@ sweep_configuration = {
     "name": f"{model_type} - Predicting Sales & Mean Competition & Open Included",
     "metric": {"goal": "maximize", "name": "mean_val_score"},
     "parameters": {
-        "model": {"values": ["random_forest", "gradient_boosting"]},
-        "n_estimators": {"values": [10, 50, 100, 200, 400]},
-        "max_depth": {"values": [3, 5, 10]},
+        "max_depth": {"values": [None, 3, 5, 10, 15, 20]},
         "max_features": {"values": [1, 2, 4, 8, 12, 16, None, "sqrt", "log2"]},
+        "min_samples_split": {"values": [2, 5, 10]},
+        "min_samples_leaf": {"values": [1, 2, 4, 8, 12, 16]},
 
         # The following parameters are not used by the model, but are used by the training script.
         "val_size": {"values": [0.2, 0.3]},
@@ -32,22 +32,12 @@ def main():
     # Initialize wandb.
     run = wandb.init(tags=[target.name])
 
-    if run.config.model == "random_forest":
-        # Create a RandomForestRegressor with the parameters from the sweep.
-        model = RandomForestRegressor(
-            n_estimators=run.config.n_estimators,
-            max_depth=run.config.max_depth,
-            max_features=run.config.max_features,
-        )
-    elif run.config.model == "gradient_boosting":
-        # Create a GradientBoostingRegressor with the parameters from the sweep.
-        model = GradientBoostingRegressor(
-            n_estimators=run.config.n_estimators,
-            max_depth=run.config.max_depth,
-            max_features=run.config.max_features,
-        )
-    else:
-        raise ValueError("Invalid model")
+    model = DecisionTreeRegressor(
+        max_depth=run.config.max_depth,
+        max_features=run.config.max_features,
+        min_samples_split=run.config.min_samples_split,
+        min_samples_leaf=run.config.min_samples_leaf,
+    )
 
     train_and_evaluate(model, features, target, run)
 

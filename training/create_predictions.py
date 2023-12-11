@@ -27,13 +27,26 @@ x_val.reset_index(drop=True, inplace=True)
 y_val.reset_index(drop=True, inplace=True)
 
 with_predictions = pd.concat([x_val, y_val, pd.DataFrame(predictions, columns=["Prediction"])], axis=1)
+
 with_predictions["Error"] = with_predictions["Prediction"] - with_predictions["Sales"]
-
-# Square the error to get rid of negative values.
 with_predictions["Error"] = with_predictions["Error"] ** 2
-# Take the square root to get the RMSE.
-with_predictions["Error"] = with_predictions["Error"] ** 0.5
 
-with_predictions["Error %"] = with_predictions["Error"] / with_predictions["Sales"] * 100
+with_predictions = with_predictions[with_predictions["Sales"] > 0]
+
+# RMSPE
+rmspe = (with_predictions["Prediction"] - with_predictions["Sales"]) / with_predictions["Sales"]
+rmspe = rmspe ** 2
+rmspe = rmspe.sum() / len(rmspe)
+rmspe = rmspe ** 0.5
+print(rmspe)
+
+# with_predictions["Error"] = with_predictions["Prediction"] - with_predictions["Sales"]
+#
+# # Square the error to get rid of negative values.
+# with_predictions["Error"] = with_predictions["Error"] ** 2
+# # Take the square root to get the RMSE.
+# with_predictions["Error"] = with_predictions["Error"] ** 0.5
+#
+# with_predictions["Error %"] = with_predictions["Error"] / with_predictions["Sales"] * 100
 
 print(with_predictions.head(10))
