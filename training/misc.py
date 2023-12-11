@@ -68,6 +68,9 @@ def get_train_data(use_train: bool = True) -> (pd.DataFrame, pd.Series):
 
 def process_data(data: pd.DataFrame, stores: pd.DataFrame) -> pd.DataFrame:
 
+    stores["CompetitionOpenSinceYear"].fillna(round(stores.CompetitionOpenSinceYear.mean()))
+    stores["CompetitionOpenSinceMonth"].fillna(round(stores.CompetitionOpenSinceMonth.mean()))
+
     stores.fillna(0, inplace=True)
 
     data = data.merge(stores, on="Store ID")
@@ -75,5 +78,6 @@ def process_data(data: pd.DataFrame, stores: pd.DataFrame) -> pd.DataFrame:
     data["Date"] = pd.to_datetime(data["Date"])
     data["Year"] = data["Date"].dt.year
     data["Month"] = data["Date"].dt.month
+
 
     return data
