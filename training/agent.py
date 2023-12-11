@@ -1,3 +1,4 @@
+import os
 import pathlib
 import pickle
 
@@ -88,10 +89,14 @@ def train_and_evaluate(model, features: pd.DataFrame, target: pd.Series, run):
         with open(f"./model_output/model-{run.id}-{index}.pkl", "wb") as f:
             pickle.dump(model, f)
 
-        # Create an artifact for the model and upload it to wandb.
-        art = wandb.Artifact(f"model-{run.id}", type="model")
-        art.add_file(f"./model_output/model-{run.id}-{index}.pkl", name=f"model-{index}.pkl")
-        run.log_artifact(art)
+            if os.stat(f"./model_output/model-{run.id}-{index}.pkl").st_size > 30 * 1024 * 1024:
+                print("Model too big, skipping upload")
+                continue
+
+            # Create an artifact for the model and upload it to wandb.
+            art = wandb.Artifact(f"model-{run.id}", type="model")
+            art.add_file(f"./model_output/model-{run.id}-{index}.pkl", name=f"model-{index}.pkl")
+            run.log_artifact(art)
 
     # Log the mean scores.
     run.log({
