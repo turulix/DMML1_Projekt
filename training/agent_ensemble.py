@@ -11,7 +11,7 @@ project = "DMML1_Projekt_Tim"
 # Settings for the WandB Sweep
 sweep_configuration = {
     "method": "grid",
-    "name": f"{model_type} - Predicting Sales with Date & More Features & Mean Competition",
+    "name": f"{model_type} - Predicting Sales & Mean Competition & Open Included",
     "metric": {"goal": "maximize", "name": "mean_val_score"},
     "parameters": {
         "model": {"values": ["random_forest", "gradient_boosting"]},

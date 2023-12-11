@@ -36,7 +36,4 @@ with_predictions["Error"] = with_predictions["Error"] ** 0.5
 
 with_predictions["Error %"] = with_predictions["Error"] / with_predictions["Sales"] * 100
 
-# Filter out the rows where Sales is 0.
-with_predictions = with_predictions.loc[with_predictions["Sales"] != 0]
-
 print(with_predictions.head(10))

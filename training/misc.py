@@ -22,7 +22,7 @@ def get_train_data(use_train: bool = True) -> (pd.DataFrame, pd.Series):
         ("Drop Unused", "drop", [
             # "Store ID",
             "Date",
-            "Open",
+            # "Open",
             "PromoInterval"
         ]),
         ("One Hot Encode", OneHotEncoder(handle_unknown="ignore"), [
@@ -74,7 +74,7 @@ def process_data(data: pd.DataFrame, stores: pd.DataFrame) -> pd.DataFrame:
     stores.fillna(0, inplace=True)
 
     data = data.merge(stores, on="Store ID")
-    data = data.loc[data["Open"] == 1]
+    # data = data.loc[data["Open"] == 1]
     data["Date"] = pd.to_datetime(data["Date"])
     data["Year"] = data["Date"].dt.year
     data["Month"] = data["Date"].dt.month
