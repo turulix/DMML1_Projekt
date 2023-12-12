@@ -45,19 +45,22 @@ def process_data(data: pd.DataFrame, stores: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def get_train_data(use_train: bool = True) -> (pd.DataFrame, pd.Series):
+def get_train_data(train_data: pd.DataFrame, test_data: pd.DataFrame) -> (pd.DataFrame, pd.Series):
     # Load stores & Trainings Data.
     stores = pd.read_csv("../data/dmml1_stores.csv")
-    train_data = pd.read_csv("../data/dmml1_train.csv")
 
     # Process the data, join the stores data with the train data.
     # Add new Features, like Year and Month.
     # Also fill NaN values with 0.
     train_data = process_data(train_data, stores)
+    test_data = process_data(test_data, stores)
 
     # Split the data into features and target and drop columns that are meant to be predicted.
-    features = train_data.drop(columns=["Sales", "Customers"])
-    target = train_data["Sales"]
+    train_features = train_data.drop(columns=["Sales", "Customers"])
+    train_target = train_data["Sales"]
+
+    test_features = test_data.drop(columns=["Sales", "Customers"])
+    test_target = test_data["Sales"]
 
     # Create a ColumnTransformer to transform the data.
     column_transformer = ColumnTransformer([
@@ -84,25 +87,32 @@ def get_train_data(use_train: bool = True) -> (pd.DataFrame, pd.Series):
     # Fit the transformer on the feature dataframe.
     # Reason for this is that the transformer needs to stay consistent between training and testing.
     # We don't want to process the data differently between training and testing.
-    column_transformer.fit(features)
+    column_transformer.fit(train_features)
 
-    if use_train:
-        # Transform the trainings data and drop rows with NaN values.
-        transformed_train_data = pd.DataFrame(
-            column_transformer.transform(features),
-            columns=column_transformer.get_feature_names_out()
-        )
-        # This should do nothing, but just to be sure.
-        transformed_train_data.dropna(inplace=True)  # Drop rows with NaN values
-        return transformed_train_data, target
-    else:
-        test_data = pd.read_csv("../data/dmml1_test.csv")
-        test_data = process_data(test_data, stores)
-        transformed_test_data = pd.DataFrame(
-            column_transformer.transform(test_data),
-            columns=column_transformer.get_feature_names_out()
-        )
-        return transformed_test_data, None
+    return (
+        pd.DataFrame(column_transformer.transform(train_features), columns=column_transformer.get_feature_names_out()),
+        train_target,
+        pd.DataFrame(column_transformer.transform(test_features), columns=column_transformer.get_feature_names_out()),
+        test_target
+    )
+
+    # if use_train:
+    #     # Transform the trainings data and drop rows with NaN values.
+    #     transformed_train_data = pd.DataFrame(
+    #         column_transformer.transform(train_features),
+    #         columns=column_transformer.get_feature_names_out()
+    #     )
+    #     # This should do nothing, but just to be sure.
+    #     transformed_train_data.dropna(inplace=True)  # Drop rows with NaN values
+    #     return transformed_train_data, train_target
+    # else:
+    #     test_data = pd.read_csv("../data/dmml1_test.csv")
+    #     test_data = process_data(test_data, stores)
+    #     transformed_test_data = pd.DataFrame(
+    #         column_transformer.transform(test_data),
+    #         columns=column_transformer.get_feature_names_out()
+    #     )
+    #     return transformed_test_data, None
 
 
 def maybe_start_sweep(sweep_configuration, project, entity) -> str:
@@ -134,13 +144,13 @@ def maybe_start_sweep(sweep_configuration, project, entity) -> str:
     return sweep_id
 
 
-def train_and_evaluate(model, features: pd.DataFrame, target: pd.Series, run):
+def train_and_evaluate(model, x_train: pd.DataFrame, y_train: pd.Series, x_test: pd.DataFrame, y_test: pd.Series, run):
     """This function trains and evaluates the model. Just to keep the main function clean."""
 
-    print(f"Features: {features.columns}")
-    print(f"Target: {target.name}")
-    print(f"Number of features: {len(features.columns)}")
-    print(f"Number of samples: {len(features)}")
+    print(f"Features: {x_train.columns}")
+    print(f"Target: {y_train.name}")
+    print(f"Number of features: {len(x_train.columns)}")
+    print(f"Number of samples: {len(x_train)}")
 
     # Upload the current code to wandb.
     run.log_code("./", name=f"sweep-{run.sweep_id}-code", include_fn=lambda path: path.endswith(".py"))
@@ -149,46 +159,41 @@ def train_and_evaluate(model, features: pd.DataFrame, target: pd.Series, run):
     kfold = KFold(n_splits=run.config.n_folds, shuffle=True, random_state=42)
 
     # Split the data into trainings data & validation data.
-    features, x_val, target, y_val = train_test_split(features, target, test_size=run.config.val_size, random_state=42)
     test_scores = []
     val_scores = []
     train_scores = []
 
     # Iterate over the splits.
-    for index, (train_index, test_index) in enumerate(kfold.split(features, target)):
-        print(f"Split {index}")
-        print(f"Train: {len(train_index)}")
-        print(f"Test: {len(test_index)}")
-
-        # Get the trainings and test data for this split.
-        x_train, x_test = features.iloc[train_index], features.iloc[test_index]
-        y_train, y_test = target.iloc[train_index], target.iloc[test_index]
+    for index, (train_index, val_index) in enumerate(kfold.split(x_train, y_train)):
+        # Get the trainings and validation data for this split.
+        x_train_real, x_val = x_train.iloc[train_index], x_train.iloc[val_index]
+        y_train_real, y_val = y_train.iloc[train_index], y_train.iloc[val_index]
 
         # Fit the model on the training's data.
-        model.fit(x_train, y_train)
+        model.fit(x_train_real, y_train_real)
 
         # Evaluate the model on the different datasets.
+        train_score = model.score(x_train_real, y_train_real)
         val_score = model.score(x_val, y_val)
-        train_score = model.score(x_train, y_train)
         test_score = model.score(x_test, y_test)
 
         # Store the scores. To calculate the mean later.
-        test_scores.append(test_score)
         val_scores.append(val_score)
         train_scores.append(train_score)
+        test_scores.append(test_score)
 
         # Log the scores and the model. To WandB.
         run.log({
             "split": index,
-            "test_score": test_score,
             "val_score": val_score,
             "train_score": train_score,
+            "test_score": test_score,
         })
 
         # Plot the feature importance.
         # This is a helper function from wandb. And checks if the model has a feature_importance_ attribute.
         # If it does, it will plot the feature importance.
-        plot_feature_importances(model, features.columns)
+        plot_feature_importances(model, x_train_real.columns)
 
         # Save the model to a file.
         with open(f"./model_output/model-{run.id}-{index}.pkl", "wb") as f:
@@ -205,9 +210,9 @@ def train_and_evaluate(model, features: pd.DataFrame, target: pd.Series, run):
 
     # Log the mean scores.
     run.log({
-        "mean_test_score": sum(test_scores) / len(test_scores),
         "mean_val_score": sum(val_scores) / len(val_scores),
         "mean_train_score": sum(train_scores) / len(train_scores),
+        "mean_test_score": sum(test_scores) / len(test_scores),
     })
 
     # Finish the run.
