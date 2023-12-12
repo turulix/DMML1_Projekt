@@ -10,9 +10,9 @@ def main():
 
     params = {
         "val_size": 0.2,
-        "n_estimators": 100,
-        "max_depth": 5,
-        "max_features": 8,
+        "n_estimators": 200,
+        "max_depth": 10,
+        "max_features": 16,
     }
 
     features, x_val, target, y_val = train_test_split(features, target, test_size=params["val_size"], random_state=42)
