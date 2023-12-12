@@ -1,4 +1,6 @@
+import pandas as pd
 import wandb
+from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
 from misc import get_train_data, maybe_start_sweep, train_and_evaluate
@@ -28,9 +30,12 @@ sweep_id = maybe_start_sweep(sweep_configuration, project, entity)
 
 
 def main():
-    features, target = get_train_data(use_train=True)
+    train_data = pd.read_csv("../data/dmml1_train.csv")
+    train_data, test_data = train_test_split(train_data, test_size=0.2, random_state=42)
+
+    x_train, y_train, x_test, y_test = get_train_data(train_data, test_data)
     # Initialize wandb.
-    run = wandb.init(tags=[target.name])
+    run = wandb.init()
 
     model = DecisionTreeRegressor(
         max_depth=run.config.max_depth,
@@ -39,7 +44,7 @@ def main():
         min_samples_leaf=run.config.min_samples_leaf,
     )
 
-    train_and_evaluate(model, features, target, run)
+    train_and_evaluate(model, x_train, y_train, x_test, y_test, run)
 
 
 # Start the WandB sweep agent.

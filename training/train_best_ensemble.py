@@ -46,6 +46,8 @@ def main():
 
     with_predictions = with_predictions[with_predictions["remainder__Open"] == 1]
 
+    print(with_predictions["Penalty"].sum())
+
     print(with_predictions.head(10))
 
 if __name__ == "__main__":

@@ -33,8 +33,6 @@ sweep_id = maybe_start_sweep(sweep_configuration, project, entity)
 def main():
     train_data = pd.read_csv("../data/dmml1_train.csv")
     train_data, test_data = train_test_split(train_data, test_size=0.2, random_state=42)
-    train_data.reset_index(drop=True, inplace=True)
-    test_data.reset_index(drop=True, inplace=True)
 
     x_train, y_train, x_test, y_test = get_train_data(train_data, test_data)
     # Initialize wandb.
