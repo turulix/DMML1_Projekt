@@ -2,6 +2,7 @@ import os
 import pathlib
 import pickle
 
+import numpy as np
 import pandas as pd
 import wandb
 from sklearn.compose import ColumnTransformer
@@ -26,13 +27,20 @@ def process_data(data: pd.DataFrame, stores: pd.DataFrame) -> pd.DataFrame:
     data["Promo2SinceYear"].fillna(0, inplace=True)
     data["PromoInterval"].fillna("", inplace=True)
 
+    data['BeforeHoliday'] = np.where((data['Open'] == 1) & ((
+            data['StateHoliday'].shift(1).isin(['a', 'b', 'c']) | data['StateHoliday'].shift(2).isin(
+        ['a', 'b', 'c']))), 1, 0)
+
+    data['AfterHoliday'] = np.where((data['Open'] == 1) & (
+        (data['StateHoliday'].shift(-1).isin(['a', 'b', 'c']) | data['StateHoliday'].shift(-2).isin(['a', 'b', 'c']))),
+                                    1, 0)
+
     data.fillna(0, inplace=True)
 
     # data = data.loc[data["Open"] == 1]
     data["Date"] = pd.to_datetime(data["Date"])
     data["Year"] = data["Date"].dt.year
     data["Month"] = data["Date"].dt.month
-
 
     return data
 

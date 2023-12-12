@@ -17,7 +17,7 @@ sweep_configuration = {
         "n_estimators": {"values": [100, 200, 400]},
         "max_depth": {"values": [3, 5, 10]},
         "max_features": {"values": [16, 20, 28]},
-        "learning_rate": {"values": [0.1, 0.01, 0.001, 0.0001]},
+        "learning_rate": {"values": [0.2, 0.3, 0.1]},
 
         # The following parameters are not used by the model, but are used by the training script.
         "val_size": {"values": [0.2]},
