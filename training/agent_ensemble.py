@@ -10,7 +10,7 @@ project = "DMML1_Projekt_Tim"
 # Settings for the WandB Sweep, we are using a grid search here.
 sweep_configuration = {
     "method": "grid",
-    "name": f"{model_type} - Predicting Sales with PromoInterval & learning_rate",
+    "name": f"{model_type} - Predicting Sales with PromoInterval & learning_rate & Better",
     "metric": {"goal": "maximize", "name": "mean_val_score"},
     "parameters": {
         #  "model": {"values": ["random_forest", "gradient_boosting"]},
