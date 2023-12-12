@@ -1,52 +1,42 @@
 import pickle
 
+import numpy as np
 import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.metrics import *
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
 
 from training.misc import get_train_data
 
-with open("../data/model_ensemble.pkl", "rb") as f:
-    model: GradientBoostingRegressor = pickle.load(f)
 
-features, target = get_train_data(use_train=True)
+def main():
+    train_data = pd.read_csv("../data/dmml1_train.csv")
+    test_data = pd.read_csv("../data/dmml1_test.csv")
 
-features, x_val, target, y_val = train_test_split(features, target, test_size=0.2, random_state=42)
+    # Set Sales and Customers to 0 because they are not in the test data, and are dropped in get_train_data
+    test_data["Sales"] = 0
+    test_data["Customers"] = 0
 
-predictions = model.predict(x_val)
-print(mean_absolute_error(y_val, predictions))
-print(mean_squared_error(y_val, predictions))
-print(mean_absolute_percentage_error(y_val, predictions))
-print(explained_variance_score(y_val, predictions))
-print(median_absolute_error(y_val, predictions))
-print(r2_score(y_val, predictions))
-print(max_error(y_val, predictions))
+    x_train, y_train, x_test, y_test = get_train_data(train_data, test_data)
 
-x_val.reset_index(drop=True, inplace=True)
-y_val.reset_index(drop=True, inplace=True)
+    model: GradientBoostingRegressor = pickle.load(open("../data/model_ensemble.pkl", "rb"))
 
-with_predictions = pd.concat([x_val, y_val, pd.DataFrame(predictions, columns=["Prediction"])], axis=1)
+    predictions = model.predict(x_test)
 
-with_predictions["Error"] = with_predictions["Prediction"] - with_predictions["Sales"]
-with_predictions["Error"] = with_predictions["Error"] ** 2
+    print(predictions)
 
-with_predictions = with_predictions[with_predictions["Sales"] > 0]
+    test_data["Sales"] = predictions
 
-# RMSPE
-rmspe = (with_predictions["Prediction"] - with_predictions["Sales"]) / with_predictions["Sales"]
-rmspe = rmspe ** 2
-rmspe = rmspe.sum() / len(rmspe)
-rmspe = rmspe ** 0.5
-print(rmspe)
+    # Set Sales to 0 where Open is 0
+    test_data["Sales"] = np.where(test_data["Open"] == 0, 0, test_data["Sales"])
 
-# with_predictions["Error"] = with_predictions["Prediction"] - with_predictions["Sales"]
-#
-# # Square the error to get rid of negative values.
-# with_predictions["Error"] = with_predictions["Error"] ** 2
-# # Take the square root to get the RMSE.
-# with_predictions["Error"] = with_predictions["Error"] ** 0.5
-#
-# with_predictions["Error %"] = with_predictions["Error"] / with_predictions["Sales"] * 100
+    test_data.drop(columns=["Customers"], inplace=True)
 
-print(with_predictions.head(10))
+    test_data.to_csv("../data/dmml1_test_predictions.csv", index=False)
+
+
+
+
+if __name__ == "__main__":
+    main()
