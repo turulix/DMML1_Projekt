@@ -16,16 +16,24 @@ def process_data(data: pd.DataFrame, stores: pd.DataFrame) -> pd.DataFrame:
     It also adds new features like Year and Month and fills NaN values with 0.
     """
 
-    stores["CompetitionOpenSinceYear"].fillna(round(stores.CompetitionOpenSinceYear.mean()))
-    stores["CompetitionOpenSinceMonth"].fillna(round(stores.CompetitionOpenSinceMonth.mean()))
-
-    stores.fillna(0, inplace=True)
+    stores["CompetitionOpenSinceYear"].fillna(round(stores["CompetitionOpenSinceYear"].mean()), inplace=True)
+    stores["CompetitionOpenSinceMonth"].fillna(round(stores["CompetitionOpenSinceMonth"].mean()), inplace=True)
 
     data = data.merge(stores, on="Store ID")
+
+    data["CompetitionDistance"].fillna(data["CompetitionDistance"].mean(), inplace=True)
+    data["Promo2SinceWeek"].fillna(0, inplace=True)
+    data["Promo2SinceYear"].fillna(0, inplace=True)
+    data["PromoInterval"].fillna("", inplace=True)
+
+    data.fillna(0, inplace=True)
+
     # data = data.loc[data["Open"] == 1]
     data["Date"] = pd.to_datetime(data["Date"])
     data["Year"] = data["Date"].dt.year
     data["Month"] = data["Date"].dt.month
+
+
     return data
 
 
@@ -47,12 +55,12 @@ def get_train_data(use_train: bool = True) -> (pd.DataFrame, pd.Series):
     column_transformer = ColumnTransformer([
         ("Drop Unused", "drop", [
             "Date",
-            "PromoInterval"
         ]),
         ("One Hot Encode", OneHotEncoder(handle_unknown="ignore"), [
             "StateHoliday",
             "StoreType",
-            "Assortment"
+            "Assortment",
+            "PromoInterval"
         ]),
         ("Scale", StandardScaler(), [
             "CompetitionDistance",
